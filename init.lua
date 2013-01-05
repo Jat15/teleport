@@ -8,7 +8,7 @@ Licence CC-BY-SA for image
 --Variable
 
 local couleurs = {"black","blue","brown","cyan","dark_green","dark_grey","green","grey","magenta","orange","pink","red","violet","white","yellow"}
-local serveur = {x=-0,y=2,z=0}
+local serveur = {x=-801,y=9,z=62}
 
 --Function
 
@@ -37,7 +37,7 @@ minetest.register_node("teleport:serveur", {
     pointable = false,
 	groups = {unbreakable=1},
 	after_place_node = function(pos, placer)
-		minetest.env:get_meta(pos):set_string("lesadresse",minetest.serialize({}))
+		minetest.env:get_meta(pos):set_string("lesadresse",minetest.serialize())
 		--privs["interact"] = true
 	end,
 })
@@ -137,6 +137,7 @@ minetest.register_node("teleport:socle", {
 	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_string("adresse",minetest.serialize({"","","","",""}))
 		minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize({"","","","",""}))
+		minetest.env:get_meta(pos):set_string("lessocle",minetest.serialize({"","","",""}))
 		minetest.env:get_meta(pos):set_string("portail",minetest.serialize())
 		minetest.env:get_meta(pos):set_string("signalisation",minetest.serialize({}))
 		minetest.env:get_meta(pos):set_string("etat",minetest.serialize())
@@ -199,8 +200,8 @@ minetest.register_node("teleport:pierremulticouleur", {
 				minetest.env:remove_node(pos)
 			else
 				local adressecompose=minetest.deserialize(minetest.env:get_meta(autour):get_string("adressecompose"))
-				table.insert(adressecompose, 1, "multicouleur")
-				minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize(adressecompose))
+				adressecompose[1]="teleport:pierremulticouleur"
+				minetest.env:get_meta(autour):set_string("adressecompose",minetest.serialize(adressecompose))
 				local portail=minetest.deserialize(minetest.env:get_meta(autour):get_string("portail"))
 				if portail==nil then
 					local prb = false
@@ -211,20 +212,23 @@ minetest.register_node("teleport:pierremulticouleur", {
 						if signialisation=={} or not(1==table.getn(signialisation)) then
 							minetest.chat_send_player(placer:get_player_name(), "Il vous manque la signialisation "..c.." ou il y en a trop.(optionelle)")
 						else
-							table.insert(varsignialisation, c, signialisation)
+							varsignialisation[c]=signialisation[1]
 							minetest.env:get_meta(autour):set_string("signialisation",minetest.serialize(varsignialisation))
 						end
 					end
 					--Trouver les 4 socle
 					for c=1,4 do
+						local lessocle=minetest.deserialize(minetest.env:get_meta(autour):get_string("lessocle"))
 						local socle=minetest.env:find_nodes_in_area({x=autour.x-15,y=autour.y-15,z=autour.z-15},{x=autour.x+15,y=autour.y+15,z=autour.z+15},"teleport:socle"..c.."" )
 						if socle==nil or not(1==table.getn(socle)) then
 							minetest.chat_send_player(placer:get_player_name(), "Il vous manque le socle "..c.." ou il y en a trop. Il y a "..table.getn(socle).." socle.")
 							prb = true
-						end
-						minetest.env:get_meta(socle):set_string("position",minetest.serialize(autour))
---						minetest.chat_send_all(minetest.serialize(socle))
---						minetest.chat_send_all(minetest.env:get_meta(socle):get_string("position"))
+						else
+							lessocle[c]=socle[1]
+							minetest.env:get_meta(socle[1]):set_string("position",minetest.serialize(autour))
+						end			
+--						minetest.chat_send_all(minetest.serialize(socle[1]))
+--						minetest.chat_send_all(minetest.env:get_meta(socle[1]):get_string("position"))
 					end
 					--Trouver les portail
 					if not(prb) then
@@ -241,7 +245,7 @@ minetest.register_node("teleport:pierremulticouleur", {
 					end
 					--Suppresion de la pierre si il y a aucun probleme
 					if not(prb) then
-						table.insert(adressecompose, 1, "")
+						adressecompose[1]=""
 						minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize(adressecompose))
 						minetest.env:remove_node(pos)
 					end
@@ -252,11 +256,12 @@ minetest.register_node("teleport:pierremulticouleur", {
 			local autour=autour(pos,{"teleport:socle"})
 			if not(autour==nil) then
 				local adressecompose=minetest.deserialize(minetest.env:get_meta(autour):get_string("adressecompose"))
-				table.insert(adressecompose, 1, "")
+				adressecompose[1]=""
 				minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize(adressecompose))
 			end
 		end,
 	})
+	
 for i = 1,table.getn(couleurs) do 
 	--Pierre
 	minetest.register_node("teleport:pierre"..couleurs[i].."", {
@@ -273,24 +278,33 @@ for i = 1,table.getn(couleurs) do
 				minetest.env:remove_node(pos)
 			else
 				local possocle = minetest.deserialize(minetest.env:get_meta(autour):get_string("position"))
-				local adressecompose=minetest.deserialize(minetest.env:get_meta(possocle):get_string("adressecompose"))
-				local adresse=minetest.deserialize(minetest.env:get_meta(possocle):get_string("adresse"))
-				local serveuradresse=minetest.env:get_meta(serveur):get_string("adresse")
-				table.insert(adressecompose, minetest.env:get_meta(autour):get_int("numero"), "teleport:pierre"..couleurs[i].."")
+				local adressecompose = minetest.deserialize(minetest.env:get_meta(possocle):get_string("adressecompose"))
+				local adresse = minetest.deserialize(minetest.env:get_meta(possocle):get_string("adresse"))
+				local serveuradresse = minetest.env:get_meta(serveur):get_string("adresse")
+				local lessocle=minetest.deserialize(minetest.env:get_meta(possocle):get_string("lessocle"))
+				adressecompose[minetest.env:get_meta(autour):get_int("numero")]="teleport:pierre"..couleurs[i]..""
 				minetest.env:get_meta(possocle):set_string("adressecompose",minetest.serialize(adressecompose))
 				if not(adressecompose[2]=="") and not(adressecompose[3]=="") and not(adressecompose[4]=="") and not(adressecompose[5]=="") then
 				--Sauvegarde l'adresse
 					if adressecompose[1]=="teleport:pierremulticouleur" and (adresse[1]=="" or adresse[2]=="" or adresse[3]=="" or adresse[4]=="") then
+						minetest.chat_send_all("Engistrement de l'adresse")
 						--Engistre dans le socle
-						table.insert(adresse, 1, adressecompose[2])
-						table.insert(adresse, 2, adressecompose[3])
-						table.insert(adresse, 3, adressecompose[4])
-						table.insert(adresse, 4, adressecompose[5])
+						adresse[1]=adressecompose[2]
+						adresse[2]=adressecompose[3]
+						adresse[3]=adressecompose[4]
+						adresse[4]=adressecompose[5]
 						minetest.env:get_meta(possocle):set_string("adresse",minetest.serialize(adresse))
 						--Envoie au  serveur
 						serveuradresse[""..adressecompose[2]..","..adressecompose[3]..","..adressecompose[4]..","..adressecompose[5]..""] = possocle
 						minetest.env:get_meta(serveur):set_string("adresse",minetest.serialize(serveuradresse))
+						--Suppression des pierre
+						minetest.env:remove_node(autour(possocle,{adressecompose[1]}))
+						minetest.env:remove_node(autour(lesocle[1],{adressecompose[2]}))
+						minetest.env:remove_node(autour(lesocle[2],{adressecompose[3]}))
+						minetest.env:remove_node(autour(lesocle[3],{adressecompose[4]}))
+						minetest.env:remove_node(autour(lesocle[4],{adressecompose[5]}))
 					else
+						minetest.chat_send_all("Compose l'adresse")
 						--Si on prend l'adresse de la porte
 						if not({adressecompose[2],adressecompose[3],adressecompose[4],adressecompose[5]}==adresse) then
 							--Si l'adresse est valide
@@ -318,7 +332,7 @@ for i = 1,table.getn(couleurs) do
 			if not(autour==nil) then
 				local possocle = minetest.deserialize(minetest.env:get_meta(autour):get_string("position"))
 				local adressecompose=minetest.deserialize(minetest.env:get_meta(possocle):get_string("adressecompose"))
-				table.insert(adressecompose, minetest.env:get_meta(autour):get_int("numero"), "")
+				adressecompose[minetest.env:get_meta(autour):get_int("numero")]=""
 				minetest.env:get_meta(possocle):set_string("adressecompose",minetest.serialize(adressecompose))
 			end
 		end,
@@ -340,4 +354,29 @@ for i = 1,table.getn(couleurs) do
 	})
 end
 
-
+minetest.register_node("teleport:test", {
+		description = "Pierre test",
+		tiles = {"default_cobble.png"},
+		is_ground_content = false,
+		walkable = true,
+		pointable = true,
+		groups = {dig_immediate=3},
+		after_place_node = function(pos, placer)
+			local autour=autour(pos,{"teleport:socle","teleport:socle1","teleport:socle2","teleport:socle3","teleport:socle4"})
+			if autour == nil then
+				placer:get_inventory():add_item("main", "teleport:pierre"..couleurs[i].." 1")
+				minetest.env:remove_node(pos)
+			else
+				minetest.chat_send_all(minetest.env:get_meta(autour):get_string("adressecompose"))
+			end
+		end,
+		on_destruct = function(pos)
+			local autour=autour(pos,{"teleport:socle1","teleport:socle2","teleport:socle3","teleport:socle4"})
+			if not(autour==nil) then
+--				local possocle = minetest.deserialize(minetest.env:get_meta(autour):get_string("position"))
+--				local adressecompose=minetest.deserialize(minetest.env:get_meta(possocle):get_string("adressecompose"))
+--				table.insert(adressecompose, minetest.env:get_meta(autour):get_int("numero"), "")
+--				minetest.env:get_meta(possocle):set_string("adressecompose",minetest.serialize(adressecompose))
+			end
+		end,
+	})
