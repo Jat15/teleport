@@ -123,6 +123,7 @@ minetest.register_node("teleport:socle1", {
     walkable = true,
     pointable = true,
 	groups = {unbreakable=1},
+	drop= "",
 	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_int("numero", 2)
 		placer:get_inventory():add_item('main', 'teleport:socle2')
@@ -135,7 +136,8 @@ minetest.register_node("teleport:socle2", {
     walkable = true,
     pointable = true,
 	groups = {unbreakable=1},
-		after_place_node = function(pos, placer)
+	drop= "",
+	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_int("numero", 3)
 		placer:get_inventory():add_item('main', 'teleport:socle3')
 	end,
@@ -147,6 +149,7 @@ minetest.register_node("teleport:socle3", {
     walkable = true,
     pointable = true,
 	groups = {unbreakable=1},
+	drop= "",
 	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_int("numero", 4)
 		placer:get_inventory():add_item('main', 'teleport:socle4')
@@ -159,6 +162,7 @@ minetest.register_node("teleport:socle4", {
     walkable = true,
     pointable = true,
 	groups = {unbreakable=1},
+	drop= "",
 	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_int("numero", 5)
 		placer:get_inventory():add_item('main', 'teleport:portail 99')
@@ -171,6 +175,7 @@ minetest.register_node("teleport:socle", {
     walkable = true,
     pointable = true,
 	groups = {unbreakable=1},
+	drop= "",
 	after_place_node = function(pos, placer)
 		minetest.env:get_meta(pos):set_string("adresse",minetest.serialize({"","","",""}))
 		minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize({"","","","",""}))
@@ -178,6 +183,20 @@ minetest.register_node("teleport:socle", {
 		minetest.env:get_meta(pos):set_string("portail",minetest.serialize())
 		minetest.env:get_meta(pos):set_string("signalisation",minetest.serialize({}))
 		placer:get_inventory():add_item('main', 'teleport:socle1')
+	end,
+	on_destruct = function(pos)
+		local adresse = minetest.deserialize(minetest.env:get_meta(pos):get_string("adresse"))
+		local socle = minetest.deserialize(minetest.env:get_meta(pos):get_string("lessocle"))
+		local serveuradresse = minetest.deserialize(minetest.env:get_meta(serveur):get_string("lesadresse"))
+		if not(adresse[1]=="" or adresse[2]=="" or adresse[3]=="" or adresse[4]=="") then
+			serveuradresse[""..adresse[1]..","..adresse[2]..","..adresse[3]..","..adresse[4]..""] = nil
+			minetest.env:get_meta(serveur):set_string("lesadresse",minetest.serialize(serveuradresse))
+		end		
+		for i=1,table.getn(socle) do
+			if not(socle[i]=="") then
+				minetest.env:remove_node(socle[i])
+			end
+		end
 	end,
 })
 
