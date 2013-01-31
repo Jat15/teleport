@@ -45,8 +45,10 @@ minetest.register_globalstep(function(dtime)
 	for pos,v in pairs(tempo) do 
 		if os.difftime(os.time(),v)>duree_vortex or os.difftime(os.time(),v)<0 then
 			local portail=minetest.deserialize(minetest.env:get_meta(pos):get_string("portail"))
-			for c=1,table.getn(portail) do
-				minetest.env:remove_node(portail[c])
+			if not(portail==nil) then
+				for c=1,table.getn(portail) do
+					minetest.env:remove_node(portail[c])
+				end
 			end
 			tempo[pos]=nil
 		end
