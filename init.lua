@@ -1,7 +1,7 @@
 --[[
 Teleport ver 0.9 par Jat
 Licence GPLv2 or later for code
-Licence CC-BY-SA for image
+Licence WTFPL for image
 teleport_pierre_*.png and teleport_portail*.png by AndrOn
 --]]
 
@@ -12,15 +12,22 @@ dofile(minetest.get_modpath("teleport").."/conf.lua")
 ----Fixe
 local couleurs = {"black","blue","brown","cyan","dark_green","dark_grey","green","grey","magenta","orange","pink","red","violet","white","yellow"}
 local timer=0
+local version=18062013
 
---Initialisation (A supprimé aprés premiere execution)
+--Engistre dans le cube la version teleport qui est utilisé
 local place=true
 minetest.register_globalstep(function(dtime)
 	if place then
-		minetest.env:add_node(TELEPORT_SERVEUR, {name="teleport:serveur"})
-		place=false
+		mversion=minetest.env:get_meta(TELEPORT_SERVEUR):get_int("version")
+		if mversion==nil or mversion<version then
+			mversion=minetest.env:get_meta(TELEPORT_SERVEUR):set_int("version",version)
+			print("Mise a jour de teleport dans le cube")
+		end
 	end
 end)
+
+
+
 
 --Function
 
@@ -66,6 +73,7 @@ minetest.register_node("teleport:serveur", {
     pointable = true,
 	groups = {unbreakable=1},
 	on_construct = function(pos)
+		minetest.env:get_meta(pos):set_int("version",version)
 		minetest.env:get_meta(pos):set_string("lesadresse",minetest.serialize({}))
 		minetest.env:get_meta(pos):set_string("lestempo",minetest.serialize({}))
 	end,
