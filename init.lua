@@ -21,7 +21,6 @@ minetest.register_globalstep(function(dtime)
 		mversion=minetest.env:get_meta(TELEPORT_SERVEUR):get_int("version")
 		if mversion==nil or mversion<version then
 			mversion=minetest.env:get_meta(TELEPORT_SERVEUR):set_int("version",version)
-			print("Mise a jour de teleport dans le cube")
 		end
 	end
 end)
