@@ -332,9 +332,9 @@ minetest.register_node("teleport:pierre", {
 minetest.register_craft({
 output = "teleport:pierre",
 recipe = {
-	{"", "default:mese",""},
-	{"default:glass", "", "default:glass"},
-	{"", "default:mese", ""},
+	{"","default:mese_crystal",""},
+	{"default:glass","","default:glass"},
+	{"","default:mese_crystal",""},
 }
 })
 for i = 1,table.getn(couleurs) do 
