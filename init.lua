@@ -12,21 +12,22 @@ dofile(minetest.get_modpath("teleport").."/conf.lua")
 ----Fixe
 local couleurs = {"black","blue","brown","cyan","dark_green","dark_grey","green","grey","magenta","orange","pink","red","violet","white","yellow"}
 local timer=0
-local version=18062013
+local version=25062013
 
 --Engistre dans le cube la version teleport qui est utilisé
 local place=true
 minetest.register_globalstep(function(dtime)
 	if place then
-		mversion=minetest.env:get_meta(TELEPORT_SERVEUR):get_int("version")
-		if mversion==nil or mversion<version then
-			mversion=minetest.env:get_meta(TELEPORT_SERVEUR):set_int("version",version)
+		local mversion=minetest.env:get_meta(TELEPORT_SERVEUR):get_int("version")
+		if mversion==nil or mversion<18062013 then
+			minetest.env:get_meta(TELEPORT_SERVEUR):set_int("version",version)
+		end
+		if mversion<version then
+			minetest.env:get_meta(TELEPORT_SERVEUR):set_string("lestempo",nil)
+			minetest.env:get_meta(TELEPORT_SERVEUR):set_int("version",version)
 		end
 	end
 end)
-
-
-
 
 --Function
 
@@ -41,26 +42,23 @@ local function allentour(pos,node)
 	end
 end
 
-minetest.register_globalstep(function(dtime)
-	timer = timer+dtime
-	if timer <= 1 then
-		return
-	end
-	timer = 0
-	local tempo=minetest.deserialize(minetest.env:get_meta(TELEPORT_SERVEUR):get_string("lestempo"))
-	for pos,v in pairs(tempo) do 
-		if os.difftime(os.time(),v)>TELEPORT_DUREE_VORTEX or os.difftime(os.time(),v)<0 then
-			local portail=minetest.deserialize(minetest.env:get_meta(pos):get_string("portail"))
-			if not(portail==nil) then
-				for c=1,table.getn(portail) do
-					minetest.env:remove_node(portail[c])
-				end
+local function actualisation(pos)
+	menservice = minetest.env:get_meta(pos):get_int("enservice")
+	if menservice==0 then
+		return true
+	elseif not(os.difftime(os.time(),menservice)>TELEPORT_DUREE_VORTEX or os.difftime(os.time(),menservice)<0) then	
+		return false
+	else
+		local portail=minetest.deserialize(minetest.env:get_meta(pos):get_string("portail"))
+		if not(portail==nil) then
+			for c=1,table.getn(portail) do
+				minetest.env:remove_node(portail[c])
 			end
-			tempo[pos]=nil
 		end
+		minetest.env:get_meta(pos):set_int("enservice",nil)
+		return true
 	end
-	minetest.env:get_meta(TELEPORT_SERVEUR):set_string("lestempo",minetest.serialize(tempo))
-end)
+end
 
 --Serveur central
 
@@ -74,7 +72,6 @@ minetest.register_node("teleport:serveur", {
 	on_construct = function(pos)
 		minetest.env:get_meta(pos):set_int("version",version)
 		minetest.env:get_meta(pos):set_string("lesadresse",minetest.serialize({}))
-		minetest.env:get_meta(pos):set_string("lestempo",minetest.serialize({}))
 	end,
 })
 
@@ -112,10 +109,19 @@ minetest.register_node("teleport:portail", {
 --ABM
 
 minetest.register_abm(
-	{nodenames = {"teleport:portailentree"},
-    interval = 1.0,
+	{nodenames = {"teleport:socle"},
+    interval = 1,
     chance = 1,
-    action = function(pos, node, active_object_count, active_object_count_wider)
+    action = function(pos)
+		actualisation(pos)
+    end
+})
+
+minetest.register_abm(
+	{nodenames = {"teleport:portailentree"},
+    interval = 1,
+    chance = 1,
+    action = function(pos)
 		local players = minetest.env:get_objects_inside_radius(pos, 1)
         for k, player in pairs(players) do
 			player:setpos(minetest.deserialize(minetest.env:get_meta(pos):get_string("teleportation")))
@@ -379,16 +385,8 @@ for i = 1,table.getn(couleurs) do
 						local possoclereception = serveuradresse[""..adressecompose[2]..","..adressecompose[3]..","..adressecompose[4]..","..adressecompose[5]..""]
 						if not(adresse[1]==adressecompose[2] and adresse[2]==adressecompose[3] and adresse[3]==adressecompose[4] and adresse[4]==adressecompose[5]) then
 							--Si les deux point sont pas les meme
-							local tempo=minetest.deserialize(minetest.env:get_meta(TELEPORT_SERVEUR):get_string("lestempo"))
-							local porte=true
 							--Verifie que les portail sont pas occupé
-							for pos,v in pairs(tempo) do
-								if (pos.x==possoclereception.x and pos.y==possoclereception.y and pos.z==possoclereception.z) or (pos.x==possocle.x and pos.y==possocle.y and pos.z==possocle.z) then
-									porte=false
-									break
-								end
-							end
-							if porte then
+							if actualisation(possocle) and actualisation(possoclereception) then
 								local portailenvoie=minetest.deserialize(minetest.env:get_meta(possocle):get_string("portail"))
 								local portailreception=minetest.deserialize(minetest.env:get_meta(possoclereception):get_string("portail"))
 								--Portail d'envoie
@@ -401,9 +399,8 @@ for i = 1,table.getn(couleurs) do
 									minetest.env:add_node(portailreception[c], {name="teleport:portailsortie"})
 								end
 								--Temp
-								tempo[possocle]=os.time()
-								tempo[possoclereception]=os.time()
-								minetest.env:get_meta(TELEPORT_SERVEUR):set_string("lestempo",minetest.serialize(tempo))
+								minetest.env:get_meta(possocle):set_int("enservice", os.time())
+								minetest.env:get_meta(possoclereception):set_int("enservice", os.time())
 								--Suppression des pierre
 								for c=1,4 do
 									if 25==math.random(1,50) then	
