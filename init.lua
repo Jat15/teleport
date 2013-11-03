@@ -196,7 +196,6 @@ minetest.register_node("teleport:socle", {
 		minetest.env:get_meta(pos):set_string("adressecompose",minetest.serialize({"","","","",""}))
 		minetest.env:get_meta(pos):set_string("lessocle",minetest.serialize({"","","",""}))
 		minetest.env:get_meta(pos):set_string("portail",minetest.serialize())
-		minetest.env:get_meta(pos):set_string("signalisation",minetest.serialize({}))
 		placer:get_inventory():add_item('main', 'teleport:socle1')
 	end,
 	on_destruct = function(pos)
@@ -217,46 +216,6 @@ minetest.register_node("teleport:socle", {
 
 --Pierre / Signialisation
 
-minetest.register_node("teleport:signalisation1", {
-	description = "Signale",
-	tiles = {"bobblocks_whiteblock.png"},
-	is_ground_content = false,
-	walkable = true,
-	pointable = true,
-	groups = {unbreakable=1},
-})
-minetest.register_node("teleport:signalisation2", {
-	description = "Signale",
-	tiles = {"bobblocks_whiteblock.png"},
-	is_ground_content = false,
-	walkable = true,
-	pointable = true,
-	groups = {unbreakable=1},
-})
-minetest.register_node("teleport:signalisation3", {
-	description = "Signale",
-	tiles = {"bobblocks_whiteblock.png"},
-	is_ground_content = false,
-	walkable = true,
-	pointable = true,
-	groups = {unbreakable=1},
-})
-minetest.register_node("teleport:signalisation4", {
-	description = "Signale",
-	tiles = {"bobblocks_whiteblock.png"},
-	is_ground_content = false,
-	walkable = true,
-	pointable = true,
-	groups = {unbreakable=1},
-})
-minetest.register_node("teleport:signalisation", {
-	description = "Signale",
-	tiles = {"bobblocks_whiteblock.png"},
-	is_ground_content = false,
-	walkable = true,
-	pointable = true,
-	groups = {unbreakable=1},
-})
 minetest.register_node("teleport:pierremulticouleur", {
 		description = "Pierre pour admin",
 		tiles = {"default_cobble.png"},
@@ -273,17 +232,6 @@ minetest.register_node("teleport:pierremulticouleur", {
 			local portail=minetest.deserialize(minetest.env:get_meta(autour):get_string("portail"))
 			if portail==nil then
 				local prb = false
-				--Trouver les 4 signialisation
-				for c=1,4 do
-					local varsignalisation=minetest.deserialize(minetest.env:get_meta(autour):get_string("signialisation"))
-					local signialisation=minetest.env:find_nodes_in_area({x=autour.x-15,y=autour.y-15,z=autour.z-15},{x=autour.x+15,y=autour.y+15,z=autour.z+15},"teleport:signalisation"..c.."" )
-					if signialisation=={} or not(1==table.getn(signialisation)) then
-						minetest.chat_send_player(placer:get_player_name(), "Il vous manque la signialisation "..c.." ou il y en a trop.(optionelle)")
-					else
-						varsignialisation[c]=signialisation[1]
-						minetest.env:get_meta(autour):set_string("signialisation",minetest.serialize(varsignialisation))
-					end
-				end
 				--Trouver les 4 socle
 				for c=1,4 do
 					local lessocle=minetest.deserialize(minetest.env:get_meta(autour):get_string("lessocle"))
@@ -423,21 +371,6 @@ for i = 1,table.getn(couleurs) do
 				adressecompose[minetest.env:get_meta(autour):get_int("numero")]=""
 				minetest.env:get_meta(possocle):set_string("adressecompose",minetest.serialize(adressecompose))
 			end
-		end,
-	})
-	--Signalisation
-	minetest.register_node("teleport:signalisation"..couleurs[i].."", {
-		description = "Signale les couleur "..couleurs[i].."",
-		tiles = {"bobblocks_whiteblock.png^dye_"..couleurs[i]..".png"},
-		is_ground_content = false,
-		walkable = true,
-		pointable = true,
-		groups = {unbreakable=1},
-		on_construct = function(pos)
-			minetest.env:get_node_timer(pos):start(TELEPORT_DUREE_VORTEX)
-		end,
-		on_timer = function(pos,elapsed)
-			minetest.env:add_node(pos, {name="teleport:signalisation"})
 		end,
 	})
 	--Craft
