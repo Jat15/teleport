@@ -114,7 +114,6 @@ minetest.register_globalstep(function(dtime)
 	if not(place) then
 		return
 	end
-	print("la")
 		local mversion=minetest.get_meta(TELEPORT_SERVEUR):get_int("version")
 		if mversion==nil or mversion<18062013 then
 			minetest.get_meta(TELEPORT_SERVEUR):set_int("version",version)
@@ -428,7 +427,7 @@ minetest.register_entity("teleport:clavier", {
 		local nodeparam2 = minetest.get_node({x=self.pos.x,y=self.pos.y-1,z=self.pos.z}).param2+1
 		local possocle = minetest.deserialize(minetest.get_meta({x=self.pos.x,y=self.pos.y-1,z=self.pos.z}):get_string("socle"))
 		local adressecompose = minetest.deserialize(minetest.get_meta(possocle):get_string("adressecompose"))
-		if pos.y>self.pos.y-0.5 then
+		if pos.y>self.pos.y-0.45 then
 			efface = false
 			--Regarde si on est dans la zone adresse desactif
 			for c=1,table.getn(hudadresse.desactif) do
@@ -440,7 +439,7 @@ minetest.register_entity("teleport:clavier", {
 				end
 			end
 			
-			--Regarde si on est dans la zone adresse 
+			--Regarde si on est dans la zone adresse actif
 			for c=1,table.getn(hudadresse.actif) do
 				local posa={x=self.pos.x+hudadresse.actif[c].x*facedir[nodeparam2].x,y=self.pos.y+hudadresse.actif[c].y,z=self.pos.z+hudadresse.actif[c].z*facedir[nodeparam2].z}
 				if (posa.x-0.05<=pos.x and pos.x<=posa.x+0.05) and 
