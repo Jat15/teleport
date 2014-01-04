@@ -238,9 +238,11 @@ minetest.register_abm(
     interval = 1,
     chance = 1,
     action = function(pos)
-		local players = minetest.get_objects_inside_radius(pos, 0.5)
+		local players = minetest.get_objects_inside_radius(pos, 1)
         for k, player in pairs(players) do
-			player:setpos(minetest.deserialize(minetest.get_meta(pos):get_string("teleportation")))
+			if player:is_player() then
+				player:setpos(minetest.deserialize(minetest.get_meta(pos):get_string("teleportation")))
+			end
 		end
     end
 })
