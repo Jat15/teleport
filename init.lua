@@ -125,6 +125,7 @@ minetest.register_globalstep(function(dtime)
 		if mversion<version then
 			local serveuradresse = minetest.deserialize(minetest.get_meta(TELEPORT_SERVEUR):get_string("lesadresse"))
 			local nouveauxserveuxadresse={}
+			if not serveuradresse then return end
 			for key, val in pairs(serveuradresse) do
 				--socle
 				local adresse = minetest.deserialize(minetest.get_meta(val):get_string("adresse"))
